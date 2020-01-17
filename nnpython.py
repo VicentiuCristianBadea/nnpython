@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 BATCH_SIZE = 1
 LABEL = np.arange(10)
-EPOCHS = 10
+EPOCHS = 12
 
 THETA1_R, THETA1_C = 785, 25
 THETA2_R, THETA2_C = 26, 25
@@ -42,97 +42,84 @@ def dsigmoid(x):
 def softmax(x):
     return np.exp(x)/np.sum(np.exp(x), axis=0)
 
-def test_data_func(x, THETA1, THETA2, THETA3):
+def forwardProp(i, batch, BATCH_SIZE):
+	a_1 = np.array([TRAIN_DATA[i+batch*BATCH_SIZE, 1:]]) #input data into input_layer
+	a_1 = np.array([np.insert(a_1, 0, 1)])
+	z_2 = np.dot(a_1, THETA1) #Hidden layer 1: multiply by weights and add biases
+	a_2 = sigmoid(z_2) #activation function
+	a_2 = np.array([np.insert(a_2, 0, 1)])
+	z_3 = np.dot(a_2, THETA2) #Hidden layer 2: multiply by weights and add biases
+	a_3 = sigmoid(z_3) #activation function
+	a_3 = np.array([np.insert(a_3, 0, 1)])
+	a_4_out = np.dot(a_3, THETA3)
+	a_4 = sigmoid(a_4_out) #10 classes
+	output = a_4 #predicted output
+	y = np.equal(TRAIN_DATA[i+batch*BATCH_SIZE, 0], LABEL).astype(int)  
+	return output, y, a_1, a_2, a_3  
 
+def backProp(output, y, a_1, a_2, a_3, MSE, DELTA3, DELTA2, DELTA1):
+	sigma4 = output-y
+	sigma3 = np.multiply(np.dot(sigma4, np.transpose(THETA3)), dsigmoid(a_3))#1x26 * 1x26
+	sigma2 = np.multiply(np.dot(sigma3[:, 1:], np.transpose(THETA2)), dsigmoid(a_2))#1x26
+	MSE += sigma4**2 #Mean squared error
+	DELTA3 += np.dot(np.transpose(a_3), sigma4) #25x10
+	DELTA2 += np.transpose(np.dot(np.transpose(a_2), sigma3[:, 1:])) #25x25
+	DELTA1 += np.transpose(np.dot(np.transpose(a_1), sigma2[:, 1:])) #784x1 * 1x25
+	return DELTA1, DELTA2, DELTA3, MSE
+
+def updateWeights(MSE, DELTA1, DELTA2, DELTA3, THETA1, THETA2, THETA3):
+	MSE /= 2
+	MSE = np.array(MSE)
+	MSE_error = np.sum(MSE)
+	MSE_error /= float(BATCH_SIZE)
+	DELTA3 /= float(BATCH_SIZE)
+	DELTA2 /= float(BATCH_SIZE)
+	DELTA1 /= float(BATCH_SIZE)
+	THETA3 -= 0.001*DELTA3
+	THETA2 -= 0.001*np.transpose(DELTA2)
+	THETA1 -= 0.001*np.transpose(DELTA1)
+	return THETA1, THETA2, THETA3
+
+def test_data_func(x, THETA1, THETA2, THETA3):
     a_1 = np.array(TEST_DATA[x, 1:]) #input data into input_layer
     a_1 = np.array([np.insert(a_1, 0, 1)])
-
     z_2 = np.dot(a_1, THETA1) #Hidden layer 1: multiply by weights and add biases
     a_2 = sigmoid(z_2) #activation function
     a_2 = np.array([np.insert(a_2, 0, 1)])
-
     z_3 = np.dot(a_2, THETA2) #Hidden layer 2: multiply by weights and add biases
     a_3 = sigmoid(z_3) #activation function
     a_3 = np.array([np.insert(a_3, 0, 1)])
-
     a_4_out = np.dot(a_3, THETA3)
     a_4 = sigmoid(a_4_out) #10 classes
-
     output = a_4 #predicted output
     y = np.equal(TEST_DATA[x, 0], LABEL).astype(int)
-
     print(output)
     print("Predicted value:", np.argmax(output))
     print("Real binary value:", y)
     print("Real value:", TEST_DATA[x, 0])
 
 def train_data_func(TRAIN_DATA, THETA1, THETA2, THETA3):
-
-    for epoch in range(EPOCHS):
-
-        ACCURACY = 0.0
-        PREDICTIONS = 0.0
-        GOOD_PRED = 0.0
-
-        np.random.shuffle(TRAIN_DATA)
-
-        for batch in range(int((len(TRAIN_DATA)/BATCH_SIZE))):
-
-            DELTA3 = 0
-            DELTA2 = 0
-            DELTA1 = 0
-            MSE = 0
-
-            for i in range(BATCH_SIZE):
-                a_1 = np.array([TRAIN_DATA[i+batch*BATCH_SIZE, 1:]]) #input data into input_layer
-                a_1 = np.array([np.insert(a_1, 0, 1)])
-
-                z_2 = np.dot(a_1, THETA1) #Hidden layer 1: multiply by weights and add biases
-                a_2 = sigmoid(z_2) #activation function
-                a_2 = np.array([np.insert(a_2, 0, 1)])
-
-                z_3 = np.dot(a_2, THETA2) #Hidden layer 2: multiply by weights and add biases
-                a_3 = sigmoid(z_3) #activation function
-                a_3 = np.array([np.insert(a_3, 0, 1)])
-
-                a_4_out = np.dot(a_3, THETA3)
-                a_4 = sigmoid(a_4_out) #10 classes
-
-                output = a_4 #predicted output
-                y = np.equal(TRAIN_DATA[i+batch*BATCH_SIZE, 0], LABEL).astype(int)
-
-                PREDICTIONS += 1
-                if(np.argmax(output) == TRAIN_DATA[i+batch*BATCH_SIZE, 0]):
-                    GOOD_PRED += 1
-                ACCURACY = (GOOD_PRED/PREDICTIONS)*100
-
-                sigma4 = output-y
-                sigma3 = np.multiply(np.dot(sigma4, np.transpose(THETA3)), dsigmoid(a_3))#1x26 * 1x26
-                sigma2 = np.multiply(np.dot(sigma3[:, 1:], np.transpose(THETA2)), dsigmoid(a_2))#1x26
-
-                MSE += sigma4**2 #Mean squared error
-
-                DELTA3 += np.dot(np.transpose(a_3), sigma4) #25x10
-                DELTA2 += np.transpose(np.dot(np.transpose(a_2), sigma3[:, 1:])) #25x25
-                DELTA1 += np.transpose(np.dot(np.transpose(a_1), sigma2[:, 1:])) #784x1 * 1x25
-
-            MSE /= 2
-            MSE = np.array(MSE)
-            MSE_error = np.sum(MSE)
-            MSE_error /= float(BATCH_SIZE)
-
-            DELTA3 /= float(BATCH_SIZE)
-            DELTA2 /= float(BATCH_SIZE)
-            DELTA1 /= float(BATCH_SIZE)
-
-            THETA3 -= 0.001*DELTA3
-            THETA2 -= 0.001*np.transpose(DELTA2)
-            THETA1 -= 0.001*np.transpose(DELTA1)
-
-            if batch%100 == 0:
-                print("ACCURACY:", "%.3f" % ACCURACY+"%", "    ", "CURRENT EPOCH:", epoch+1, "    ", "CURRENT BATCH:", batch)
-
-    return THETA1, THETA2, THETA3
+	for epoch in range(EPOCHS):
+		ACCURACY = 0.0
+		PREDICTIONS = 0.0
+		GOOD_PRED = 0.0
+		np.random.shuffle(TRAIN_DATA)
+		for batch in range(int((len(TRAIN_DATA)/BATCH_SIZE))):
+			DELTA3 = 0
+			DELTA2 = 0
+			DELTA1 = 0
+			MSE = 0
+			for i in range(BATCH_SIZE):
+				output, y, a_1, a_2, a_3 = forwardProp(i, batch, BATCH_SIZE)
+				DELTA1, DELTA2, DELTA3, MSE = backProp(output, y, a_1, a_2, a_3, MSE, DELTA3, DELTA2, DELTA1)
+				PREDICTIONS += 1
+				if(np.argmax(output) == TRAIN_DATA[i+batch*BATCH_SIZE, 0]):
+					GOOD_PRED += 1
+				ACCURACY = (GOOD_PRED/PREDICTIONS)*100
+			THETA1, THETA2, THETA3 = updateWeights(MSE, DELTA1, DELTA2, DELTA3, THETA1, THETA2, THETA3)           
+			if batch%100 == 0:
+			    print("ACCURACY:", "%.3f" % ACCURACY+"%", "    ", "CURRENT EPOCH:", epoch+1, "    ", "CURRENT BATCH:", batch)
+	return THETA1, THETA2, THETA3
 
 THETA1_TEST, THETA2_TEST, THETA3_TEST = train_data_func(TRAIN_DATA, THETA1, THETA2, THETA3)
 
