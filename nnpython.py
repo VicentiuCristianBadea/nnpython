@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import csv
 
 print("Initializing hyperparameters for Neural Network")
 BATCH_SIZE = 1
@@ -22,6 +23,8 @@ TEST_DATA = np.array(TEST_DATA, float)
 # Normalizing training and testing data
 TRAIN_DATA[:, 1:] = np.divide(TRAIN_DATA[:, 1:].astype(float), 255.0)
 TEST_DATA[:, 1:] = np.divide(TEST_DATA[:, 1:].astype(float), 255.0)
+lines = []
+data_file = "trainingResults_"+str(THETA1_R)+"_"+str(THETA1_C)+"_"+str(THETA2_R)+"_"+str(THETA2_C)+"_"+str(THETA3_R)+"_"+str(THETA3_C)+"_"+str(BATCH_SIZE)+"_"+str(EPOCHS)
 
 print("Data is loaded.")
 
@@ -124,8 +127,15 @@ def train_data_func(TRAIN_DATA, THETA1, THETA2, THETA3):
 				if(np.argmax(output) == TRAIN_DATA[i+batch*BATCH_SIZE, 0]):
 					GOOD_PRED += 1
 				ACCURACY = (GOOD_PRED/PREDICTIONS)*100
+				if batch%1000 == 0:
+					line = [ACCURACY, i, epoch]
+					lines.append(line)
 			THETA1, THETA2, THETA3 = updateWeights(MSE, DELTA1, DELTA2, DELTA3, THETA1, THETA2, THETA3)           
 		print("\n ACCURACY:", "%.3f" % ACCURACY+"%", "    ", " CURRENT EPOCH:", (str(epoch+1))+"/"+(str(EPOCHS)), "                 ", "CURRENT BATCH")
+	with open(data_file, "wb") as csv_file:
+		writer = csv.writer(csv_file, delimiter=',')
+		for l in lines:
+			writer.writerow(l)
 	return THETA1, THETA2, THETA3
 
 THETA1_TEST, THETA2_TEST, THETA3_TEST = train_data_func(TRAIN_DATA, THETA1, THETA2, THETA3)
