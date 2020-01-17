@@ -130,7 +130,6 @@ def train_data_func(TRAIN_DATA, THETA1, THETA2, THETA3):
             THETA1 -= 0.001*np.transpose(DELTA1)
 
             if batch%100 == 0:
-                #print("CURRENT BATCH:", batch, "    ", "CURRENT EPOCH:", epoch, "/", EPOCHS, "    ", "ACCURACY:", "%.3f" % ACCURACY)
                 print("ACCURACY:", "%.3f" % ACCURACY+"%", "    ", "CURRENT EPOCH:", epoch+1, "    ", "CURRENT BATCH:", batch)
 
     return THETA1, THETA2, THETA3
