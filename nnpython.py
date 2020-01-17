@@ -8,6 +8,7 @@ print("Initializing hyperparameters for Neural Network")
 BATCH_SIZE = 1
 LABEL = np.arange(10)
 EPOCHS = 12
+LEARNING_RATE = 0.001
 
 # Size of rows (_R) and columns (_C) for weight matrices 
 THETA1_R, THETA1_C = 785, 25
@@ -24,7 +25,7 @@ TEST_DATA = np.array(TEST_DATA, float)
 TRAIN_DATA[:, 1:] = np.divide(TRAIN_DATA[:, 1:].astype(float), 255.0)
 TEST_DATA[:, 1:] = np.divide(TEST_DATA[:, 1:].astype(float), 255.0)
 lines = []
-data_file = "trainingResults_"+str(THETA1_R)+"_"+str(THETA1_C)+"_"+str(THETA2_R)+"_"+str(THETA2_C)+"_"+str(THETA3_R)+"_"+str(THETA3_C)+"_"+str(BATCH_SIZE)+"_"+str(EPOCHS)
+data_file = "trainingResults_"+str(THETA1_R)+"_"+str(THETA1_C)+"_"+str(THETA2_R)+"_"+str(THETA2_C)+"_"+str(THETA3_R)+"_"+str(THETA3_C)+"_"+str(BATCH_SIZE)+"_"+str(EPOCHS)+"_"+str(LEARNING_RATE)
 
 print("Data is loaded.")
 
@@ -86,9 +87,9 @@ def updateWeights(MSE, DELTA1, DELTA2, DELTA3, THETA1, THETA2, THETA3):
 	DELTA3 /= float(BATCH_SIZE) 
 	DELTA2 /= float(BATCH_SIZE)
 	DELTA1 /= float(BATCH_SIZE)
-	THETA3 -= 0.001*DELTA3 # Multiplying errors by learning rate
-	THETA2 -= 0.001*np.transpose(DELTA2)
-	THETA1 -= 0.001*np.transpose(DELTA1)
+	THETA3 -= LEARNING_RATE*DELTA3 # Multiplying errors by learning rate
+	THETA2 -= LEARNING_RATE*np.transpose(DELTA2)
+	THETA1 -= LEARNING_RATE*np.transpose(DELTA1)
 	return THETA1, THETA2, THETA3 
 
 def test_data_func(x, THETA1, THETA2, THETA3):
