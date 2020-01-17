@@ -24,8 +24,10 @@ TEST_DATA = np.array(TEST_DATA, float)
 # Normalizing training and testing data
 TRAIN_DATA[:, 1:] = np.divide(TRAIN_DATA[:, 1:].astype(float), 255.0)
 TEST_DATA[:, 1:] = np.divide(TEST_DATA[:, 1:].astype(float), 255.0)
-lines = []
-data_file = "trainingResults_"+str(THETA1_R)+"_"+str(THETA1_C)+"_"+str(THETA2_R)+"_"+str(THETA2_C)+"_"+str(THETA3_R)+"_"+str(THETA3_C)+"_"+str(BATCH_SIZE)+"_"+str(EPOCHS)+"_"+str(LEARNING_RATE)
+learning_lines = []
+testing_lines = []
+learning_data_file = "trainingResults_"+str(THETA1_R)+"_"+str(THETA1_C)+"_"+str(THETA2_R)+"_"+str(THETA2_C)+"_"+str(THETA3_R)+"_"+str(THETA3_C)+"_"+str(BATCH_SIZE)+"_"+str(EPOCHS)+"_"+str(LEARNING_RATE)
+testing_data_file = "testingResults_"+str(THETA1_R)+"_"+str(THETA1_C)+"_"+str(THETA2_R)+"_"+str(THETA2_C)+"_"+str(THETA3_R)+"_"+str(THETA3_C)+"_"+str(BATCH_SIZE)+"_"+str(EPOCHS)+"_"+str(LEARNING_RATE)
 
 print("Data is loaded.")
 
@@ -92,23 +94,33 @@ def updateWeights(MSE, DELTA1, DELTA2, DELTA3, THETA1, THETA2, THETA3):
 	THETA1 -= LEARNING_RATE*np.transpose(DELTA1)
 	return THETA1, THETA2, THETA3 
 
-def test_data_func(x, THETA1, THETA2, THETA3):
-    a_1 = np.array(TEST_DATA[x, 1:]) # Use usr_input to choose input data
-    a_1 = np.array([np.insert(a_1, 0, 1)])
-    z_2 = np.dot(a_1, THETA1) # Hidden layer 1: multiply by weights and add biases
-    a_2 = sigmoid(z_2) # Activation function
-    a_2 = np.array([np.insert(a_2, 0, 1)])
-    z_3 = np.dot(a_2, THETA2) # Hidden layer 2: multiply by weights and add biases
-    a_3 = sigmoid(z_3) # Activation function
-    a_3 = np.array([np.insert(a_3, 0, 1)])
-    a_4_out = np.dot(a_3, THETA3)
-    a_4 = sigmoid(a_4_out) # 10 classes
-    output = a_4 # Predicted output
-    y = np.equal(TEST_DATA[x, 0], LABEL).astype(int)
-    print(output)
-    print("Predicted value:", np.argmax(output))
-    print("Real binary value:", y)
-    print("Real value:", TEST_DATA[x, 0])
+def test_data_func(TEST_DATA, THETA1, THETA2, THETA3):
+	PREDICTIONS = 0.0
+	GOOD_PRED = 0.0
+	for i in tqdm(range(int(len(TEST_DATA)))):
+		a_1 = np.array(TEST_DATA[i, 1:]) # Use usr_input to choose input data
+		a_1 = np.array([np.insert(a_1, 0, 1)])
+		z_2 = np.dot(a_1, THETA1) # Hidden layer 1: multiply by weights and add biases
+		a_2 = sigmoid(z_2) # Activation function
+		a_2 = np.array([np.insert(a_2, 0, 1)])
+		z_3 = np.dot(a_2, THETA2) # Hidden layer 2: multiply by weights and add biases
+		a_3 = sigmoid(z_3) # Activation function
+		a_3 = np.array([np.insert(a_3, 0, 1)])
+		a_4_out = np.dot(a_3, THETA3)
+		a_4 = sigmoid(a_4_out) # 10 classes
+		output = a_4 # Predicted output
+		y = np.equal(TEST_DATA[i, 0], LABEL).astype(int)
+		PREDICTIONS += 1
+		if(np.argmax(output) == TEST_DATA[i, 0]):
+			GOOD_PRED += 1
+		ACCURACY = '%.3f'%((GOOD_PRED/PREDICTIONS)*100)
+		line = [ACCURACY, i, np.argmax(output), TEST_DATA[i,0]]
+		testing_lines.append(line)
+	with open(testing_data_file, "w") as csv_file:
+		writer = csv.writer(csv_file, delimiter=',')
+		for l in testing_lines:
+			writer.writerow(l)
+
 
 def train_data_func(TRAIN_DATA, THETA1, THETA2, THETA3):
 	print("\nTraining Neural Network...")
@@ -127,31 +139,21 @@ def train_data_func(TRAIN_DATA, THETA1, THETA2, THETA3):
 				PREDICTIONS += 1
 				if(np.argmax(output) == TRAIN_DATA[i+batch*BATCH_SIZE, 0]):
 					GOOD_PRED += 1
-				ACCURACY = (GOOD_PRED/PREDICTIONS)*100
+				ACCURACY = '%.3f'%((GOOD_PRED/PREDICTIONS)*100)
 				if batch%1000 == 0:
-					line = [ACCURACY, i, epoch]
-					lines.append(line)
+					line = [ACCURACY, batch, epoch]
+					learning_lines.append(line)
+					#print(lines)
 			THETA1, THETA2, THETA3 = updateWeights(MSE, DELTA1, DELTA2, DELTA3, THETA1, THETA2, THETA3)           
-		print("\n ACCURACY:", "%.3f" % ACCURACY+"%", "    ", " CURRENT EPOCH:", (str(epoch+1))+"/"+(str(EPOCHS)), "                 ", "CURRENT BATCH")
-	with open(data_file, "wb") as csv_file:
+		print("\n ACCURACY:", ACCURACY+"%", "    ", " CURRENT EPOCH:", (str(epoch+1))+"/"+(str(EPOCHS)), "                 ", "CURRENT BATCH")
+	with open(learning_data_file, "w") as csv_file:
 		writer = csv.writer(csv_file, delimiter=',')
-		for l in lines:
+		for l in learning_lines:
 			writer.writerow(l)
+			
 	return THETA1, THETA2, THETA3
 
 THETA1_TEST, THETA2_TEST, THETA3_TEST = train_data_func(TRAIN_DATA, THETA1, THETA2, THETA3)
 
-print("Network trained, please input a TEST_DATA array position to test the network:")
-USR_INPUT = input()
-USR_INPUT = int(USR_INPUT)
-test_data_func(USR_INPUT, THETA1_TEST, THETA2_TEST, THETA3_TEST)
-while USR_INPUT != 0:
-    print("Please input another number for testing:")
-    USR_INPUT = input()
-    USR_INPUT = int(USR_INPUT)
-    test_data_func(USR_INPUT, THETA1_TEST, THETA2_TEST, THETA3_TEST)
-    IMAGE = TEST_DATA[USR_INPUT, 1:]
-    IMAGE = np.array(IMAGE, dtype='float')
-    PIXELS = IMAGE.reshape((28, 28))
-    plt.imshow(PIXELS, cmap='gray')
-    plt.show()
+print("Network trained, currently testing the model.")
+test_data_func(TEST_DATA, THETA1_TEST, THETA2_TEST, THETA3_TEST)
