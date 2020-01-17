@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
+print("Initializing hyperparameters for Neural Network")
 BATCH_SIZE = 1
 LABEL = np.arange(10)
 EPOCHS = 12
@@ -22,9 +23,11 @@ TEST_DATA = np.array(TEST_DATA, float)
 TRAIN_DATA[:, 1:] = np.divide(TRAIN_DATA[:, 1:].astype(float), 255.0)
 TEST_DATA[:, 1:] = np.divide(TEST_DATA[:, 1:].astype(float), 255.0)
 
+print("Data is loaded.")
+
 # Initialize matrix of weight values for hidden layer 1 
 THETA1 = np.random.uniform(low=-0.15, high=0.15, size=(THETA1_R, THETA1_C))
-print("The shape of the THETA_1 weights is:", THETA1.shape)
+print("The shape of the THETA1 weights is:", THETA1.shape)
 
 # Initialize matrix of weight values for hidden layer 2 
 THETA2 = np.random.uniform(low=-0.15, high=0.15, size=(THETA2_R, THETA2_C))
@@ -36,6 +39,7 @@ print("the shape of the THETA3 weights is:", THETA3.shape)
 
 #Shuffle the data
 np.random.shuffle(TRAIN_DATA)
+print("Data is shuffled.")
 
 def sigmoid(x):
     return 1.0/(1.0+np.exp(-x))
@@ -103,6 +107,7 @@ def test_data_func(x, THETA1, THETA2, THETA3):
     print("Real value:", TEST_DATA[x, 0])
 
 def train_data_func(TRAIN_DATA, THETA1, THETA2, THETA3):
+	print("\nTraining Neural Network...")
 	for epoch in range(EPOCHS): # Repeat training for number of epochs
 		PREDICTIONS = 0.0
 		GOOD_PRED = 0.0
@@ -120,8 +125,7 @@ def train_data_func(TRAIN_DATA, THETA1, THETA2, THETA3):
 					GOOD_PRED += 1
 				ACCURACY = (GOOD_PRED/PREDICTIONS)*100
 			THETA1, THETA2, THETA3 = updateWeights(MSE, DELTA1, DELTA2, DELTA3, THETA1, THETA2, THETA3)           
-			#if batch%100 == 0:
-		print("\n ACCURACY:", "%.3f" % ACCURACY+"%", "    ", " CURRENT EPOCH:", epoch+1, "                    ", "CURRENT BATCH")
+		print("\n ACCURACY:", "%.3f" % ACCURACY+"%", "    ", " CURRENT EPOCH:", (str(epoch+1))+"/"+(str(EPOCHS)), "                 ", "CURRENT BATCH")
 	return THETA1, THETA2, THETA3
 
 THETA1_TEST, THETA2_TEST, THETA3_TEST = train_data_func(TRAIN_DATA, THETA1, THETA2, THETA3)
