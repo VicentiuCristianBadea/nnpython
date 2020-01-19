@@ -3,11 +3,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import csv
+import os
 
 print("Initializing hyperparameters for Neural Network")
 BATCH_SIZE = 1
 LABEL = np.arange(10)
-EPOCHS = 12
+EPOCHS = 2
 LEARNING_RATE = 0.001
 
 # Size of rows (_R) and columns (_C) for weight matrices 
@@ -26,9 +27,19 @@ TRAIN_DATA[:, 1:] = np.divide(TRAIN_DATA[:, 1:].astype(float), 255.0)
 TEST_DATA[:, 1:] = np.divide(TEST_DATA[:, 1:].astype(float), 255.0)
 learning_lines = []
 testing_lines = []
-learning_data_file = "trainingResults_"+str(THETA1_R)+"_"+str(THETA1_C)+"_"+str(THETA2_R)+"_"+str(THETA2_C)+"_"+str(THETA3_R)+"_"+str(THETA3_C)+"_"+str(BATCH_SIZE)+"_"+str(EPOCHS)+"_"+str(LEARNING_RATE)
-testing_data_file = "testingResults_"+str(THETA1_R)+"_"+str(THETA1_C)+"_"+str(THETA2_R)+"_"+str(THETA2_C)+"_"+str(THETA3_R)+"_"+str(THETA3_C)+"_"+str(BATCH_SIZE)+"_"+str(EPOCHS)+"_"+str(LEARNING_RATE)
 
+vals = list([THETA1_R, THETA1_C, THETA2_R, THETA2_C, THETA3_R, THETA3_C, BATCH_SIZE, EPOCHS, LEARNING_RATE])
+vals = [str(x) for x in vals]
+vals_joined = "_".join(vals)
+directory = "resultsForParameters_"+vals_joined
+os.mkdir(directory)
+#os.chmod(directory, 0o777)
+
+learning_data_file = "trainingResults_" + vals_joined+".csv"
+learning_data_file = os.path.join(directory, learning_data_file)
+
+testing_data_file = "testingResults_" + vals_joined+".csv"
+testing_data_file = os.path.join(directory, testing_data_file)
 print("Data is loaded.")
 
 # Initialize matrix of weight values for hidden layer 1 
