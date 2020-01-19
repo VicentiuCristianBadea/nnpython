@@ -8,7 +8,7 @@ import os
 print("Initializing hyperparameters for Neural Network")
 BATCH_SIZE = 1
 LABEL = np.arange(10)
-EPOCHS = 2
+EPOCHS = 10
 LEARNING_RATE = 0.001
 
 # Size of rows (_R) and columns (_C) for weight matrices 
