@@ -3,18 +3,19 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import csv
-import os
+import os, sys, time
 
 print("Initializing hyperparameters for Neural Network")
-BATCH_SIZE = 1
-LABEL = np.arange(10)
-EPOCHS = 10
-LEARNING_RATE = 0.001
 
 # Size of rows (_R) and columns (_C) for weight matrices 
-THETA1_R, THETA1_C = 785, 25
-THETA2_R, THETA2_C = 26, 25
-THETA3_R, THETA3_C = 26, 10
+THETA1_R, THETA1_C = int(sys.argv[1]), int(sys.argv[2])
+THETA2_R, THETA2_C = int(sys.argv[3]), int(sys.argv[4])
+THETA3_R, THETA3_C = int(sys.argv[5]), int(sys.argv[6])
+
+BATCH_SIZE = int(sys.argv[7])
+LABEL = np.arange(10)
+EPOCHS = int(sys.argv[8])
+LEARNING_RATE = float(sys.argv[9])
 
 # Loading the data 
 TRAIN_DATA = pd.read_csv("mnist_train.csv")
@@ -28,10 +29,12 @@ TEST_DATA[:, 1:] = np.divide(TEST_DATA[:, 1:].astype(float), 255.0)
 learning_lines = []
 testing_lines = []
 
+parent_dir = "modelData"
+
 vals = list([THETA1_R, THETA1_C, THETA2_R, THETA2_C, THETA3_R, THETA3_C, BATCH_SIZE, EPOCHS, LEARNING_RATE])
 vals = [str(x) for x in vals]
 vals_joined = "_".join(vals)
-directory = "resultsForParameters_"+vals_joined
+directory = os.path.join(parent_dir,"resultsForParameters_"+vals_joined)
 os.mkdir(directory)
 #os.chmod(directory, 0o777)
 
@@ -161,10 +164,11 @@ def train_data_func(TRAIN_DATA, THETA1, THETA2, THETA3):
 		writer = csv.writer(csv_file, delimiter=',')
 		for l in learning_lines:
 			writer.writerow(l)
-			
+		
 	return THETA1, THETA2, THETA3
 
 THETA1_TEST, THETA2_TEST, THETA3_TEST = train_data_func(TRAIN_DATA, THETA1, THETA2, THETA3)
 
 print("Network trained, currently testing the model.")
 test_data_func(TEST_DATA, THETA1_TEST, THETA2_TEST, THETA3_TEST)
+time.sleep(3)
